@@ -1,68 +1,41 @@
 #include "spmv.h"
 #include <stdlib.h>
 
-void dense_to_csr(const unsigned int n, const double *dense_mat, unsigned int **row_ptr, unsigned int **col_idx, double **values)
-{
-    unsigned int nnz = 0;
+CSRMatrix* dense_to_csr(const double *mat, unsigned int n) {
+    CSRMatrix *csr = (CSRMatrix *)malloc(sizeof(CSRMatrix));
+    csr->values = (double *)malloc(n * n * sizeof(double));
+    csr->col_index = (int *)malloc(n * n * sizeof(int));
+    csr->row_ptr = (int *)malloc((n + 1) * sizeof(int));
 
-    // First pass to count non-zero values
-    for (unsigned int i = 0; i < n * n; i++) {
-        if (dense_mat[i] != 0.0) {
-            nnz++;
-        }
-    }
+    int nnz = 0;
+    csr->row_ptr[0] = 0;
 
-    // Allocate CSR arrays
-    *row_ptr = (unsigned int *) malloc((n + 1) * sizeof(unsigned int));
-    *col_idx = (unsigned int *) malloc(nnz * sizeof(unsigned int));
-    *values = (double *) malloc(nnz * sizeof(double));
-
-    // Fill CSR arrays
-    unsigned int idx = 0;
     for (unsigned int i = 0; i < n; i++) {
-        (*row_ptr)[i] = idx;
         for (unsigned int j = 0; j < n; j++) {
-            if (dense_mat[i * n + j] != 0.0) {
-                (*col_idx)[idx] = j;
-                (*values)[idx] = dense_mat[i * n + j];
-                idx++;
+            double val = mat[i * n + j];
+            if (val != 0.0) {
+                csr->values[nnz] = val;
+                csr->col_index[nnz] = j;
+                nnz++;
             }
         }
+        csr->row_ptr[i + 1] = nnz;
     }
-    (*row_ptr)[n] = nnz;  // Set last entry
+
+    csr->nnz = nnz;
+    return csr;
 }
 
-void spmv_csr(const unsigned int n, const unsigned int *row_ptr, const unsigned int *col_idx, const double *values, const double *vec, double *result)
-{
-    // Initialize result vector
+int my_sparse(const CSRMatrix *csr, const double *vec, double *result, unsigned int n) {
     for (unsigned int i = 0; i < n; i++) {
         result[i] = 0.0;
     }
 
-    // Perform sparse matrix-vector multiplication
     for (unsigned int i = 0; i < n; i++) {
-        for (unsigned int j = row_ptr[i]; j < row_ptr[i + 1]; j++) {
-            result[i] += values[j] * vec[col_idx[j]];
+        for (int j = csr->row_ptr[i]; j < csr->row_ptr[i + 1]; j++) {
+            result[i] += csr->values[j] * vec[csr->col_index[j]];
         }
     }
-}
-
-int my_sparse(const unsigned int n, const double *dense_mat, const double *vec, double *result)
-{
-    unsigned int *row_ptr, *col_idx;
-    double *values;
-
-    // Convert dense matrix to CSR format
-    dense_to_csr(n, dense_mat, &row_ptr, &col_idx, &values);
-
-    // Perform sparse matrix-vector multiplication
-    spmv_csr(n, row_ptr, col_idx, values, vec, result);
-
-    // Free the allocated memory for CSR arrays
-    free(row_ptr);
-    free(col_idx);
-    free(values);
 
     return 0;
 }
-
