@@ -1,5 +1,3 @@
----
-
 # Sparse Matrix-Vector Multiplication (SpMV) and Dense Matrix-Vector Multiplication
 
 This project implements both dense and sparse matrix-vector multiplication in C, comparing performance with OpenBLAS's optimized functions.
