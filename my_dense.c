@@ -1,4 +1,5 @@
 #include "spmv.h"
+#include <omp.h>
 
 int my_dense(const unsigned int n, const double mat[], double vec[], double result[]) {
     for (unsigned int i = 0; i < n; i++) {

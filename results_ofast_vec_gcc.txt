@@ -1,0 +1,5 @@
+Time taken by OpenBLAS dense computation: 130 ms
+Time taken by my dense matrix-vector product: 350 ms
+Dense computation result is correct!
+Time taken by my sparse matrix-vector product: 34 ms
+Sparse computation result is correct!
